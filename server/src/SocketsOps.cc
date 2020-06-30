@@ -87,35 +87,16 @@ void sockets::shutdownWrite(int sockfd)
   }
 }
 
-void sockets::toIpPort(char* buf, size_t size,
-                       const struct sockaddr* addr)
+struct sockaddr_in sockets::getLocalAddr(int sockfd)
 {
-  toIp(buf,size, addr);
-  size_t end = ::strlen(buf);
-  const struct sockaddr_in* addr4 = (const struct sockaddr_in*)addr;
-  uint16_t port = be16toh(addr4->sin_port);
-  snprintf(buf+end, size-end, ":%u", port);
-}
-
-void sockets::toIp(char* buf, size_t size,
-                   const struct sockaddr* addr)
-{
-  if (addr->sa_family == AF_INET)
+  struct sockaddr_in localaddr;
+  memset(&localaddr,0 , sizeof localaddr);
+  socklen_t addrlen = static_cast<socklen_t>(sizeof localaddr);
+  if (::getsockname(sockfd, (struct sockaddr*)&localaddr, &addrlen) < 0)
   {
-    const struct sockaddr_in* addr4 = (const struct sockaddr_in*)addr;
-    ::inet_ntop(AF_INET, &addr4->sin_addr, buf, static_cast<socklen_t>(size));
+    printf("sockets::getLocalAddr\n");
   }
-}
-
-void sockets::fromIpPort(const char* ip, uint16_t port,
-                         struct sockaddr_in* addr)
-{
-  addr->sin_family = AF_INET;
-  addr->sin_port = htobe16(port);
-  if (::inet_pton(AF_INET, ip, &addr->sin_addr) <= 0)
-  {
-    printf("sockets::fromIpPort\n");
-  }
+  return localaddr;
 }
 
 int sockets::getSocketError(int sockfd)

@@ -26,10 +26,8 @@ void toIp(char* buf, size_t size,
 void fromIpPort(const char* ip, uint16_t port,
                 struct sockaddr_in* addr);
 
+struct sockaddr_in getLocalAddr(int sockfd);
 int getSocketError(int sockfd);
-
-const struct sockaddr* sockaddr_cast(const struct sockaddr_in* addr);
-const struct sockaddr_in* sockaddr_in_cast(const struct sockaddr* addr);
 
 }
 
