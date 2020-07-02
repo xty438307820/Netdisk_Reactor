@@ -107,13 +107,16 @@ class TcpConnection : Noncopyable,
   void startReadInLoop();
   void stopReadInLoop();
 
+  void handleKeyboardInput();
+
   EventLoop* loop_;
   const string name_;
   StateE state_;
   bool reading_;
 
   std::unique_ptr<Socket> socket_;
-  std::unique_ptr<Channel> channel_;
+  std::unique_ptr<Channel> channel_;//用于TCP连接的channel
+  std::unique_ptr<Channel> keyboard_channel_;//用于键盘输入的channel
   const InetAddress localAddr_;
   const InetAddress peerAddr_;
   ConnectionCallback connectionCallback_;

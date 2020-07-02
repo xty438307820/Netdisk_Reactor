@@ -32,6 +32,7 @@ TcpConnection::TcpConnection(EventLoop* loop,
     reading_(true),
     socket_(new Socket(sockfd)),
     channel_(new Channel(loop, sockfd)),
+    keyboard_channel_(new Channel(loop, STDIN_FILENO)),
     localAddr_(localAddr),
     peerAddr_(peerAddr),
     highWaterMark_(64*1024*1024)
@@ -44,6 +45,7 @@ TcpConnection::TcpConnection(EventLoop* loop,
       std::bind(&TcpConnection::handleClose, this));
   channel_->setErrorCallback(
       std::bind(&TcpConnection::handleError, this));
+  keyboard_channel_->setReadCallback(std::bind(&TcpConnection::handleKeyboardInput, this));
   printf("TcpConnection::ctor[%s] at %p fd=%d\n",name_.c_str(),this,sockfd);
   socket_->setKeepAlive(true);
 }
@@ -258,6 +260,8 @@ void TcpConnection::connectEstablished()
   channel_->tie(shared_from_this());
   channel_->enableReading();
 
+  keyboard_channel_->enableReading();
+
   connectionCallback_(shared_from_this());
 }
 
@@ -366,3 +370,10 @@ void TcpConnection::handleError()
   printf("TcpConnection::handleError [%s] - SO_ERROR = %d\n",name_.c_str(),err);
 }
 
+void TcpConnection::handleKeyboardInput(){
+  char buf[128]={0};
+  while(fgets(buf,sizeof(buf),stdin) != NULL){
+    buf[strlen(buf)-1] = 0;//去掉换行符
+    send(buf);
+  }
+}
