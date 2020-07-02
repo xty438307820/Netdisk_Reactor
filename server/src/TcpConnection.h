@@ -27,7 +27,7 @@ class TcpConnection : Noncopyable,
  typedef std::function<void (const TcpConnectionPtr&, size_t)> HighWaterMarkCallback;
  typedef std::function<void (const TcpConnectionPtr&)> CloseCallback;
  typedef std::function<void (const TcpConnectionPtr&,
-                              Buffer*,
+                              const string&,
                               Timestamp)> MessageCallback;
 
   // 构造TcpConnection,由TcpServer使用,用户不能使用
@@ -52,7 +52,7 @@ class TcpConnection : Noncopyable,
   void send(const void* message, int len);
   void send(const StringPiece& message);
   // void send(Buffer&& message); // C++11
-  void send(Buffer* message);  // this one will swap data
+  // void send(Buffer* message);  // this one will swap data
   void shutdown(); // NOT thread safe, no simultaneous calling
   // void shutdownAndForceCloseAfter(double seconds); // NOT thread safe, no simultaneous calling
   void forceClose();
@@ -128,6 +128,6 @@ class TcpConnection : Noncopyable,
 
 typedef std::shared_ptr<TcpConnection> TcpConnectionPtr;
 void defaultConnectionCallback(const TcpConnectionPtr& conn);
-void defaultMessageCallback(const TcpConnectionPtr&,Buffer* buf,Timestamp);
+void defaultMessageCallback(const TcpConnectionPtr&,const string& buf,Timestamp);
 
 #endif

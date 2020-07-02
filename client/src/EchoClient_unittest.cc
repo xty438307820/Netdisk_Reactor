@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <signal.h>
 
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -53,10 +54,10 @@ class EchoClient : Noncopyable
     conn->send("world\n");
   }
 
-  void onMessage(const TcpConnectionPtr& conn, Buffer* buf, Timestamp time)
+  void onMessage(const TcpConnectionPtr& conn, const string& msg, Timestamp time)
   {
-    string msg(buf->retrieveAllAsString());
     printf("%s recv %lu bytes at %s\n",conn->name().c_str(),msg.size(),time.toString().c_str());
+    printf("%s\n",msg.c_str());
     if (msg == "quit\n")
     {
       conn->send("bye\n");
@@ -79,6 +80,7 @@ class EchoClient : Noncopyable
 int main(int argc, char* argv[])
 {
   printf("pid = %d, tid = %d\n",getpid(),CurrentThread::tid());
+  signal(SIGPIPE,SIG_IGN);//忽略SIGPIPE信号
   if (argc > 1)
   {
     EventLoop loop;

@@ -18,7 +18,7 @@ class TcpServer : Noncopyable
   typedef std::function<void (const TcpConnectionPtr&)> ConnectionCallback;
   typedef std::function<void (const TcpConnectionPtr&)> WriteCompleteCallback;
   typedef std::function<void (const TcpConnectionPtr&,
-                              Buffer*,
+                              const string&,
                               Timestamp)> MessageCallback;
 
   enum Option

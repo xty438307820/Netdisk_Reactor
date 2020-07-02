@@ -14,7 +14,7 @@ class TcpClient : Noncopyable
   typedef std::function<void (const TcpConnectionPtr&)> WriteCompleteCallback;
   typedef std::function<void (const TcpConnectionPtr&)> CloseCallback;
   typedef std::function<void (const TcpConnectionPtr&,
-                            Buffer*,
+                            const string&,
                             Timestamp)> MessageCallback;
   // TcpClient(EventLoop* loop);
   // TcpClient(EventLoop* loop, const string& host, uint16_t port);

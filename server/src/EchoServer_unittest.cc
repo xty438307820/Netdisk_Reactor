@@ -8,8 +8,9 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#include <signal.h>
 
-int numThreads = 0;
+int numThreads = 3;
 
 using namespace std::placeholders;
 
@@ -42,10 +43,10 @@ class EchoServer
     conn->send("hello\n");
   }
 
-  void onMessage(const TcpConnectionPtr& conn, Buffer* buf, Timestamp time)
+  void onMessage(const TcpConnectionPtr& conn, const string& msg, Timestamp time)
   {
-    string msg(buf->retrieveAllAsString());
     printf("%s recv %lu bytes at %s\n",conn->name().c_str(),msg.size(),time.toString().c_str());
+    printf("%s\n",msg.c_str());
     if (msg == "exit\n")
     {
       conn->send("bye\n");
@@ -66,6 +67,7 @@ int main(int argc, char* argv[])
 {
   printf("pid = %d, tid = %d\n",getpid(),CurrentThread::tid());
   printf("sizeof TcpConnection = %lu\n",sizeof(TcpConnection));
+  signal(SIGPIPE,SIG_IGN);//忽略SIGPIPE信号
   if (argc > 1)
   {
     numThreads = atoi(argv[1]);

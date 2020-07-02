@@ -16,10 +16,9 @@ void defaultConnectionCallback(const TcpConnectionPtr& conn)
 }
 
 void defaultMessageCallback(const TcpConnectionPtr&,
-                                        Buffer* buf,
+                                        const string& msg,
                                         Timestamp)
 {
-  buf->retrieveAll();
 }
 
 TcpConnection::TcpConnection(EventLoop* loop,
@@ -75,11 +74,16 @@ void TcpConnection::send(const void* data, int len)
 
 void TcpConnection::send(const StringPiece& message)
 {
+  Buffer buf;
+  buf.append(message);
+  uint32_t be32 = htobe32(message.size());
+  buf.prepend(&be32,sizeof(be32));
   if (state_ == kConnected)
   {
     if (loop_->isInLoopThread())
     {
-      sendInLoop(message);
+      sendInLoop(buf.peek(),buf.readableBytes());
+      buf.retrieveAll();
     }
     else
     {
@@ -87,29 +91,7 @@ void TcpConnection::send(const StringPiece& message)
       loop_->runInLoop(
           std::bind(fp,
                     this,     // FIXME
-                    message.as_string()));
-                    //std::forward<string>(message)));
-    }
-  }
-}
-
-// FIXME efficiency!!!
-void TcpConnection::send(Buffer* buf)
-{
-  if (state_ == kConnected)
-  {
-    if (loop_->isInLoopThread())
-    {
-      sendInLoop(buf->peek(), buf->readableBytes());
-      buf->retrieveAll();
-    }
-    else
-    {
-      void (TcpConnection::*fp)(const StringPiece& message) = &TcpConnection::sendInLoop;
-      loop_->runInLoop(
-          std::bind(fp,
-                    this,     // FIXME
-                    buf->retrieveAllAsString()));
+                    buf.retrieveAllAsString()));
                     //std::forward<string>(message)));
     }
   }
@@ -299,7 +281,18 @@ void TcpConnection::handleRead(Timestamp receiveTime)
   ssize_t n = inputBuffer_.readFd(channel_->fd(), &savedErrno);
   if (n > 0)
   {
-    messageCallback_(shared_from_this(), &inputBuffer_, receiveTime);
+    while(inputBuffer_.readableBytes() >= 4){
+      const void* data = inputBuffer_.peek();
+      uint32_t  be32 = *static_cast<const uint32_t*>(data);
+      uint32_t  len = be32toh(be32);
+      if(inputBuffer_.readableBytes() >= 4 + len){
+        inputBuffer_.retrieve(4);
+        std::string msg(inputBuffer_.peek(),len);
+        messageCallback_(shared_from_this(),msg ,receiveTime);
+        inputBuffer_.retrieve(len);
+      }
+      else break;
+    }
   }
   else if (n == 0)
   {
