@@ -63,10 +63,6 @@ class EchoClient : Noncopyable
       conn->send("bye\n");
       conn->shutdown();
     }
-    else if (msg == "shutdown\n")
-    {
-      loop_->quit();
-    }
     else
     {
       conn->send(msg);

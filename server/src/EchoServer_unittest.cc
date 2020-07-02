@@ -52,11 +52,6 @@ class EchoServer
       conn->send("bye\n");
       conn->shutdown();
     }
-    if (msg == "quit\n")
-    {
-      loop_->quit();
-    }
-    conn->send(msg);
   }
 
   EventLoop* loop_;
