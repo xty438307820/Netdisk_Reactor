@@ -44,12 +44,16 @@ TcpClient::TcpClient(EventLoop* loop,
   connector_->setNewConnectionCallback(
       std::bind(&TcpClient::newConnection, this, _1));
   // FIXME setConnectFailedCallback
+  #ifdef DEBUG
   printf("TcpClient::TcpClient[%s] - connector %p\n",name_.c_str(),connector_.get());
+  #endif
 }
 
 TcpClient::~TcpClient()
 {
+  #ifdef DEBUG
   printf("TcpClient::~TcpClient[%s] - connector %p\n",name_.c_str(),connector_.get());
+  #endif
   TcpConnectionPtr conn;
   bool unique = false;
   {
@@ -81,7 +85,9 @@ TcpClient::~TcpClient()
 void TcpClient::connect()
 {
   // FIXME: check state
+  #ifdef DEBUG
   printf("TcpClient::connect[%s] - connecting to %s\n",name_.c_str(),connector_->serverAddress().toIpPort().c_str());
+  #endif
   connect_ = true;
   connector_->start();
 }
@@ -149,7 +155,9 @@ void TcpClient::removeConnection(const TcpConnectionPtr& conn)
   loop_->queueInLoop(std::bind(&TcpConnection::connectDestroyed, conn));
   if (retry_ && connect_)
   {
+    #ifdef DEBUG
     printf("TcpClient::connect[%s] - Reconnecting to %s\n",name_.c_str(),connector_->serverAddress().toIpPort().c_str());
+    #endif
     connector_->restart();
   }
 }

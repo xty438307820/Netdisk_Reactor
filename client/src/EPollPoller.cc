@@ -23,7 +23,9 @@ EPollPoller::EPollPoller(EventLoop* loop)
 {
   if (epollfd_ < 0)
   {
+    #ifdef DEBUG
     printf("EPollPoller::EPollPoller\n");
+    #endif
   }
 }
 
@@ -34,7 +36,9 @@ EPollPoller::~EPollPoller()
 
 Timestamp EPollPoller::poll(int timeoutMs, ChannelList* activeChannels)
 {
+  #ifdef DEBUG
   printf("fd total count %lu\n",channels_.size());
+  #endif
   int numEvents = ::epoll_wait(epollfd_,
                                &*events_.begin(),
                                static_cast<int>(events_.size()),
@@ -43,7 +47,9 @@ Timestamp EPollPoller::poll(int timeoutMs, ChannelList* activeChannels)
   Timestamp now(Timestamp::now());
   if (numEvents > 0)
   {
+    #ifdef DEBUG
     printf("%d events happened\n",numEvents);
+    #endif
     fillActiveChannels(numEvents, activeChannels);
     if (static_cast<size_t>(numEvents) == events_.size())
     {
@@ -52,7 +58,9 @@ Timestamp EPollPoller::poll(int timeoutMs, ChannelList* activeChannels)
   }
   else if (numEvents == 0)
   {
+    #ifdef DEBUG
     printf("nothing happened\n");
+    #endif
   }
   else
   {
@@ -60,7 +68,9 @@ Timestamp EPollPoller::poll(int timeoutMs, ChannelList* activeChannels)
     if (savedErrno != EINTR)
     {
       errno = savedErrno;
+      #ifdef DEBUG
       printf("EPollPoller::poll()");
+      #endif
     }
   }
   return now;
@@ -87,7 +97,9 @@ void EPollPoller::updateChannel(Channel* channel)
 {
   assertInLoopThread();
   const int index = channel->index();
+  #ifdef DEBUG
   printf("fd = %d events = %d index = %d\n",channel->fd(),channel->events(),index);
+  #endif
   if (index == kNew || index == kDeleted)
   {
     // a new one, add with EPOLL_CTL_ADD
@@ -130,7 +142,9 @@ void EPollPoller::removeChannel(Channel* channel)
 {
   assertInLoopThread();
   int fd = channel->fd();
+  #ifdef DEBUG
   printf(" fd = %d\n",fd);
+  #endif
   assert(channels_.find(fd) != channels_.end());
   assert(channels_[fd] == channel);
   assert(channel->isNoneEvent());
@@ -154,16 +168,22 @@ void EPollPoller::update(int operation, Channel* channel)
   event.events = channel->events();
   event.data.ptr = channel;
   int fd = channel->fd();
+  #ifdef DEBUG
   printf("epoll_ctl op = %s fd = %d event = { %s }",operationToString(operation),fd,channel->eventsToString().c_str());
+  #endif
   if (::epoll_ctl(epollfd_, operation, fd, &event) < 0)
   {
     if (operation == EPOLL_CTL_DEL)
     {
+      #ifdef DEBUG
       printf("epoll_ctl op =%s fd =%d\n",operationToString(operation),fd);
+      #endif
     }
     else
     {
+      #ifdef DEBUG
       printf("epoll_ctl op =%s fd =%d\n",operationToString(operation),fd);
+      #endif
     }
   }
 }

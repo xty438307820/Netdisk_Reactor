@@ -40,7 +40,9 @@ class EchoClient : Noncopyable
  private:
   void onConnection(const TcpConnectionPtr& conn)
   {
+    #ifdef DEBUG
     printf("%s -> %s is %s \n",conn->localAddress().toIpPort().c_str(),conn->peerAddress().toIpPort().c_str(),(conn->connected() ? "UP" : "DOWN"));
+    #endif
 
     if (conn->connected())
     {
@@ -49,24 +51,30 @@ class EchoClient : Noncopyable
       {
         clients[current]->connect();
       }
+      #ifdef DEBUG
       printf("*** connected\n");
+      #endif
     }
-    conn->send("world\n");
   }
 
   void onMessage(const TcpConnectionPtr& conn, const string& msg, Timestamp time)
   {
+    #ifdef DEBUG
     printf("%s recv %lu bytes at %s\n",conn->name().c_str(),msg.size(),time.toString().c_str());
     printf("%s\n",msg.c_str());
-    if (msg == "quit\n")
-    {
-      conn->send("bye\n");
-      conn->shutdown();
+    #endif
+    if(conn->getStateC() == conn->StateC_Registering){
+      if(*(int*)msg.c_str() == 0){
+        printf("register ok------------------------\n");
+        conn->setStateC(conn->StateC_Init);
+      }
+      else{
+        printf("username exist, back to home page\n");
+      }
+      printf("Enter 0 to register, 1 to login:\n");
+      conn->setStateC(conn->StateC_Init);
     }
-    else
-    {
-      conn->send(msg);
-    }
+
   }
 
   EventLoop* loop_;
@@ -75,7 +83,9 @@ class EchoClient : Noncopyable
 
 int main(int argc, char* argv[])
 {
+  #ifdef DEBUG
   printf("pid = %d, tid = %d\n",getpid(),CurrentThread::tid());
+  #endif
   signal(SIGPIPE,SIG_IGN);//忽略SIGPIPE信号
   if (argc > 1)
   {
@@ -96,6 +106,7 @@ int main(int argc, char* argv[])
       clients.emplace_back(new EchoClient(&loop, serverAddr, buf));
     }
 
+    printf("Enter 0 to register, 1 to login:\n");
     clients[current]->connect();
     loop.loop();
   }

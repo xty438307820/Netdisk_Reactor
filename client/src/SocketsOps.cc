@@ -14,7 +14,9 @@ int sockets::createNonblockingOrDie(sa_family_t family)
   int sockfd = ::socket(family, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, IPPROTO_TCP);
   if (sockfd < 0)
   {
+    #ifdef DEBUG
     printf("sockets::createNonblockingOrDie\n");
+    #endif
   }
   return sockfd;
 }
@@ -24,7 +26,9 @@ void sockets::bindOrDie(int sockfd, const struct sockaddr* addr)
   int ret = ::bind(sockfd, addr, static_cast<socklen_t>(sizeof(struct sockaddr_in)));
   if (ret < 0)
   {
+    #ifdef DEBUG
     printf("sockets::bindOrDie\n");
+    #endif
   }
 }
 
@@ -33,7 +37,9 @@ void sockets::listenOrDie(int sockfd)
   int ret = ::listen(sockfd, SOMAXCONN);
   if (ret < 0)
   {
+    #ifdef DEBUG
     printf("sockets::listenOrDie\n");
+    #endif
   }
 }
 
@@ -45,8 +51,10 @@ int sockets::accept(int sockfd, struct sockaddr_in* addr)
   if (connfd < 0)
   {
     int savedErrno = errno;
+    #ifdef DEBUG
     printf("Socket::accept\n");
     printf("unknown error of ::accept\n");
+    #endif
   }
   return connfd;
 }
@@ -75,7 +83,9 @@ void sockets::close(int sockfd)
 {
   if (::close(sockfd) < 0)
   {
+    #ifdef DEBUG
     printf("sockets::close\n");
+    #endif
   }
 }
 
@@ -83,7 +93,9 @@ void sockets::shutdownWrite(int sockfd)
 {
   if (::shutdown(sockfd, SHUT_WR) < 0)
   {
+    #ifdef DEBUG
     printf("sockets::shutdownWrite\n");
+    #endif
   }
 }
 
@@ -94,7 +106,9 @@ struct sockaddr_in sockets::getLocalAddr(int sockfd)
   socklen_t addrlen = static_cast<socklen_t>(sizeof localaddr);
   if (::getsockname(sockfd, (struct sockaddr*)&localaddr, &addrlen) < 0)
   {
+    #ifdef DEBUG
     printf("sockets::getLocalAddr\n");
+    #endif
   }
   return localaddr;
 }
@@ -106,7 +120,9 @@ struct sockaddr_in sockets::getPeerAddr(int sockfd)
   socklen_t addrlen = static_cast<socklen_t>(sizeof peeraddr);
   if (::getpeername(sockfd, (struct sockaddr*)&peeraddr, &addrlen) < 0)
   {
+    #ifdef DEBUG
     printf("sockets::getPeerAddr\n");
+    #endif
   }
   return peeraddr;
 }

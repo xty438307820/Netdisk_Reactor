@@ -11,7 +11,9 @@ using std::placeholders::_1;
 
 void defaultConnectionCallback(const TcpConnectionPtr& conn)
 {
+  #ifdef DEBUG
   printf("%s -> %s is %s\n",conn->localAddress().toIpPort().c_str(),conn->peerAddress().toIpPort().c_str(),(conn->connected() ? "UP" : "DOWN"));
+  #endif
   // do not call conn->forceClose(), because some users want to register message callback only.
 }
 
@@ -29,6 +31,7 @@ TcpConnection::TcpConnection(EventLoop* loop,
   : loop_(loop),
     name_(nameArg),
     state_(kConnecting),
+    statec_(StateC_Init),
     reading_(true),
     socket_(new Socket(sockfd)),
     channel_(new Channel(loop, sockfd)),
@@ -46,13 +49,17 @@ TcpConnection::TcpConnection(EventLoop* loop,
   channel_->setErrorCallback(
       std::bind(&TcpConnection::handleError, this));
   keyboard_channel_->setReadCallback(std::bind(&TcpConnection::handleKeyboardInput, this));
+  #ifdef DEBUG
   printf("TcpConnection::ctor[%s] at %p fd=%d\n",name_.c_str(),this,sockfd);
+  #endif
   socket_->setKeepAlive(true);
 }
 
 TcpConnection::~TcpConnection()
 {
+  #ifdef DEBUG
   printf("TcpConnection::dtor[%s] at %p fd=%d state=%s\n",name_.c_str(),this,channel_->fd(),stateToString());
+  #endif
   assert(state_ == kDisconnected);
 }
 
@@ -112,7 +119,9 @@ void TcpConnection::sendInLoop(const void* data, size_t len)
   bool faultError = false;
   if (state_ == kDisconnected)
   {
+    #ifdef DEBUG
     printf("disconnected, give up writing\n");
+    #endif
     return;
   }
   // if no thing in output queue, try writing directly
@@ -132,7 +141,9 @@ void TcpConnection::sendInLoop(const void* data, size_t len)
       nwrote = 0;
       if (errno != EWOULDBLOCK)
       {
+        #ifdef DEBUG
         printf("TcpConnection::sendInLoop\n");
+        #endif
         if (errno == EPIPE || errno == ECONNRESET) // FIXME: any others?
         {
           faultError = true;
@@ -305,7 +316,9 @@ void TcpConnection::handleRead(Timestamp receiveTime)
   else
   {
     errno = savedErrno;
+    #ifdef DEBUG
     printf("TcpConnection::handleRead\n");
+    #endif
     handleError();
   }
 }
@@ -336,7 +349,9 @@ void TcpConnection::handleWrite()
     }
     else
     {
+      #ifdef DEBUG
       printf("TcpConnection::handleWrite\n");
+      #endif
       // if (state_ == kDisconnecting)
       // {
       //   shutdownInLoop();
@@ -345,14 +360,18 @@ void TcpConnection::handleWrite()
   }
   else
   {
+    #ifdef DEBUG
     printf("Connection fd = %d is down, no more writing\n",channel_->fd());
+    #endif
   }
 }
 
 void TcpConnection::handleClose()
 {
   loop_->assertInLoopThread();
+  #ifdef DEBUG
   printf("fd = %d state = %s\n",channel_->fd(),stateToString());
+  #endif
   assert(state_ == kConnected || state_ == kDisconnecting);
   // we don't close fd, leave it to dtor, so we can find leaks easily.
   setState(kDisconnected);
@@ -367,13 +386,60 @@ void TcpConnection::handleClose()
 void TcpConnection::handleError()
 {
   int err = sockets::getSocketError(channel_->fd());
+  #ifdef DEBUG
   printf("TcpConnection::handleError [%s] - SO_ERROR = %d\n",name_.c_str(),err);
+  #endif
+}
+
+//以下为根据情况处理用户键盘输入
+void encryptStr(char* p);
+
+void TcpConnection::handleRegister(){
+    char username[128]={0};
+    char salt[32]={0};
+    char* pwd;  //明文密码
+    char* secret;  //密文密码
+
+    printf("Registering.........\n");
+    printf("Enter username:");
+    //读取键盘输入账号
+    fgets(username,sizeof(username),stdin);
+    username[strlen(username)-1] = 0;
+    //读取键盘输入密码
+    pwd = getpass("Enter password:");
+    encryptStr(salt);
+    secret = crypt(pwd,salt);
+    //将注册信息打包
+    //sprintf(buf,"%lu%lu%lu%s%s%s",strlen(username),strlen(salt),strlen(secret)-12,username,salt,secret+12);
+    int uname_len = strlen(username);
+    int salt_len = strlen(salt);
+    int secret_len = strlen(secret) - 12;
+
+    string package_ = string((char*)&uname_len,4) + string((char*)&salt_len,4) + \
+    string((char*)&secret_len,4) + username + salt + (secret + 12);
+    
+    send(package_);
 }
 
 void TcpConnection::handleKeyboardInput(){
+  char buf[128]={0};
+  if(statec_ == StateC_Init){  //刚启动程序状态
+    fgets(buf,sizeof(buf),stdin);
+    buf[strlen(buf)-1] = 0;  //去掉换行符
+    if(strcmp(buf,"0") == 0){  //注册
+      statec_ = StateC_Registering;
+      handleRegister();
+    }
+    else if(strcmp(buf,"1") == 0){
+      printf("Logining.........\n");
+    }
+    else printf("Enter 0 to register, 1 to login:\n");
+  }
+  /*
   char buf[128]={0};
   while(fgets(buf,sizeof(buf),stdin) != NULL){
     buf[strlen(buf)-1] = 0;//去掉换行符
     send(buf);
   }
+  */
 }

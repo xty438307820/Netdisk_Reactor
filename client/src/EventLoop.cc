@@ -17,7 +17,9 @@ int createEventfd()
   int evtfd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
   if (evtfd < 0)
   {
+    #ifdef DEBUG
     printf("Failed in eventfd\n");
+    #endif
     abort();
   }
   return evtfd;
@@ -40,10 +42,14 @@ EventLoop::EventLoop()
     wakeupChannel_(new Channel(this, wakeupFd_)),
     currentActiveChannel_(NULL)
 {
+  #ifdef DEBUG
   printf("EventLoop created %p in thread %d\n",this,threadId_);
+  #endif
   if (t_loopInThisThread)
   {
+    #ifdef DEBUG
     printf("Another EventLoop %p exists in this thread %d\n",t_loopInThisThread,threadId_);
+    #endif
   }
   else
   {
@@ -57,7 +63,9 @@ EventLoop::EventLoop()
 
 EventLoop::~EventLoop()
 {
+  #ifdef DEBUG
   printf("EventLoop %p of thread %d destructs in thread %d\n",this,threadId_,CurrentThread::tid());
+  #endif
   wakeupChannel_->disableAll();
   wakeupChannel_->remove();
   ::close(wakeupFd_);
@@ -70,11 +78,15 @@ void EventLoop::loop()
   assertInLoopThread();
   looping_ = true;
   quit_ = false;
+  #ifdef DEBUG
   printf("EventLoop %p start looping\n",this);
+  #endif
 
   while (!quit_)
   {
+    #ifdef DEBUG
     printf("looping...\n");
+    #endif
     activeChannels_.clear();
     pollReturnTime_ = poller_->poll(kPollTimeMs, &activeChannels_);
     ++iteration_;
@@ -96,7 +108,9 @@ void EventLoop::loop()
     doPendingFunctors();
   }
 
+  #ifdef DEBUG
   printf("EventLoop %p stop looping\n",this);
+  #endif
   looping_ = false;
 }
 
@@ -169,7 +183,9 @@ bool EventLoop::hasChannel(Channel* channel)
 
 void EventLoop::abortNotInLoopThread()
 {
+  #ifdef DEBUG
   printf("EventLoop::abortNotInLoopThread - EventLoop %p was created in threadId_ = %d, current thread id = %d\n",this,threadId_,CurrentThread::tid());
+  #endif
 }
 
 void EventLoop::wakeup()
@@ -178,7 +194,9 @@ void EventLoop::wakeup()
   ssize_t n = sockets::write(wakeupFd_, &one, sizeof one);
   if (n != sizeof one)
   {
+    #ifdef DEBUG
     printf("EventLoop::wakeup() writes %ld bytes instead of 8\n",n);
+    #endif
   }
 }
 
@@ -188,7 +206,9 @@ void EventLoop::handleRead()
   ssize_t n = sockets::read(wakeupFd_, &one, sizeof one);
   if (n != sizeof one)
   {
+    #ifdef DEBUG
     printf("EventLoop::handleRead() reads %ld  bytes instead of 8\n",n);
+    #endif
   }
 }
 
@@ -213,7 +233,9 @@ void EventLoop::printActiveChannels() const
 {
   for (const Channel* channel : activeChannels_)
   {
+    #ifdef DEBUG
     printf("{ %s }\n",channel->reventsToString().c_str());
+    #endif
   }
 }
 

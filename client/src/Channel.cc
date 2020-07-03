@@ -69,19 +69,25 @@ void Channel::handleEvent(Timestamp receiveTime)
 void Channel::handleEventWithGuard(Timestamp receiveTime)
 {
   eventHandling_ = true;
+  #ifdef DEBUG
   printf("%s\n",reventsToString().c_str());
+  #endif
   if ((revents_ & POLLHUP) && !(revents_ & POLLIN))
   {
     if (logHup_)
     {
+      #ifdef DEBUG
       printf("fd = %d Channel::handle_event() POLLHUP\n",fd_);
+      #endif
     }
     if (closeCallback_) closeCallback_();
   }
 
   if (revents_ & POLLNVAL)
   {
+    #ifdef DEBUG
     printf("fd = %d Channel::handle_event() POLLNVAL\n",fd_);
+    #endif
   }
 
   if (revents_ & (POLLERR | POLLNVAL))

@@ -90,6 +90,15 @@ class TcpConnection : Noncopyable,
   // called when TcpServer has removed me from its map
   void connectDestroyed();  // should be called only once
 
+  
+  
+  enum StateC {  //客户端状态
+    StateC_Init,  //刚连接的状态,接受键盘输入进行相应操作:0->登录,1->注册
+    StateC_Registering  //正在注册
+  };
+  StateC getStateC() { return statec_;}
+  void setStateC(StateC s) { statec_ = s; }
+
  private:
   enum StateE { kDisconnected, kConnecting, kConnected, kDisconnecting };
   void handleRead(Timestamp receiveTime);
@@ -107,11 +116,16 @@ class TcpConnection : Noncopyable,
   void startReadInLoop();
   void stopReadInLoop();
 
+  //处理键盘输入,分发给处理用户事件
   void handleKeyboardInput();
+  
+  //处理用户事件
+  void handleRegister();
 
   EventLoop* loop_;
   const string name_;
   StateE state_;
+  mutable StateC statec_;
   bool reading_;
 
   std::unique_ptr<Socket> socket_;

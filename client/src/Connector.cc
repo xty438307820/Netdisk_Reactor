@@ -15,12 +15,16 @@ Connector::Connector(EventLoop* loop, const InetAddress& serverAddr)
     state_(kDisconnected),
     retryDelayMs_(kInitRetryDelayMs)
 {
+  #ifdef DEBUG
   printf("ctor[%p]\n",this);
+  #endif
 }
 
 Connector::~Connector()
 {
+  #ifdef DEBUG
   printf("dtor[%p]\n",this);
+  #endif
   assert(!channel_);
 }
 
@@ -40,7 +44,9 @@ void Connector::startInLoop()
   }
   else
   {
+    #ifdef DEBUG
     printf("do not connect\n");
+    #endif
   }
 }
 
@@ -91,12 +97,16 @@ void Connector::connect()
     case EBADF:
     case EFAULT:
     case ENOTSOCK:
+      #ifdef DEBUG
       printf("connect error in Connector::startInLoop %d\n",savedErrno);
+      #endif
       sockets::close(sockfd);
       break;
 
     default:
+      #ifdef DEBUG
       printf("Unexpected error in Connector::startInLoop %d\n",savedErrno);
+      #endif
       sockets::close(sockfd);
       // connectErrorCallback_();
       break;
@@ -144,7 +154,9 @@ void Connector::resetChannel()
 
 void Connector::handleWrite()
 {
+  #ifdef DEBUG
   printf("Connector::handleWrite %d\n",state_);
+  #endif
 
   if (state_ == kConnecting)
   {
@@ -152,12 +164,16 @@ void Connector::handleWrite()
     int err = sockets::getSocketError(sockfd);
     if (err)
     {
+      #ifdef DEBUG
       printf("Connector::handleWrite - SO_ERROR = %d\n",err);
+      #endif
       retry(sockfd);
     }
     else if (sockets::isSelfConnect(sockfd))
     {
+      #ifdef DEBUG
       printf("Connector::handleWrite - Self connect\n");
+      #endif
       retry(sockfd);
     }
     else
@@ -182,12 +198,16 @@ void Connector::handleWrite()
 
 void Connector::handleError()
 {
+  #ifdef DEBUG
   printf("Connector::handleError state=%d\n",state_);
+  #endif
   if (state_ == kConnecting)
   {
     int sockfd = removeAndResetChannel();
     int err = sockets::getSocketError(sockfd);
+    #ifdef DEBUG
     printf("SO_ERROR = %d\n",err);
+    #endif
     retry(sockfd);
   }
 }
@@ -198,14 +218,18 @@ void Connector::retry(int sockfd)
   setState(kDisconnected);
   if (connect_)
   {
+    #ifdef DEBUG
     printf("Connector::retry - Retry connecting to %s in %d milliseconds.\n",serverAddr_.toIpPort().c_str(),retryDelayMs_);
+    #endif
     usleep(retryDelayMs_*1000);
     loop_->runInLoop(std::bind(&Connector::startInLoop, shared_from_this()));
     retryDelayMs_ = std::min(retryDelayMs_ * 2, kMaxRetryDelayMs);
   }
   else
   {
+    #ifdef DEBUG
     printf("do not connect\n");
+    #endif
   }
 }
 

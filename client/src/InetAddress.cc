@@ -99,7 +99,9 @@ bool InetAddress::resolve(StringArg hostname, InetAddress* out)
   {
     if (ret)
     {
+      #ifdef DEBUG
       printf("InetAddress::resolve\n");
+      #endif
     }
     return false;
   }

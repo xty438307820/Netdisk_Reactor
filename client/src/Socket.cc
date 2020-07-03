@@ -96,12 +96,16 @@ void Socket::setReusePort(bool on)
                          &optval, static_cast<socklen_t>(sizeof optval));
   if (ret < 0 && on)
   {
+    #ifdef DEBUG
     printf("SO_REUSEPORT failed.\n");
+    #endif
   }
 #else
   if (on)
   {
+    #ifdef DEBUG
     LOG_ERROR << "SO_REUSEPORT is not supported.";
+    #endif
   }
 #endif
 }
