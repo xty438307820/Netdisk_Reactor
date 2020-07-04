@@ -68,10 +68,37 @@ class EchoClient : Noncopyable
         printf("Register ok.........\n");
       }
       else{
-        printf("username exist, back to home page\n");
+        printf("Username exist, register fail, back to home page\n");
       }
       printf("Enter 0 to register, 1 to login:\n");
       conn->setStateC(conn->StateC_Init);
+    }
+    else if(conn->getStateC() == conn->StateC_Logining_Step1){
+      char *pwd;
+      char *secret;
+      string salt(msg);
+      pwd = getpass("Enter password:");
+      if(salt.size() == 0){
+        printf("Your username or password error, back to home page\n");
+        printf("Enter 0 to register, 1 to login:\n");
+        conn->setStateC(TcpConnection::StateC_Init);
+      }
+      else{
+        secret = crypt(pwd,salt.c_str());
+        conn->setStateC(TcpConnection::StateC_Logining_Step2);
+        conn->send(string(secret+12));
+      }
+    }
+    else if(conn->getStateC() == conn->StateC_Logining_Step2){
+      if(*(int*)msg.c_str() == 0){
+        printf("Login success.........\n");
+        conn->setStateC(TcpConnection::StateC_Login_Success);
+      }
+      else{
+        printf("Your username or password error, back to home page\n");
+        printf("Enter 0 to register, 1 to login:\n");
+        conn->setStateC(TcpConnection::StateC_Init);
+      }
     }
 
   }

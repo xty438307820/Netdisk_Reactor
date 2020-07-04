@@ -91,10 +91,18 @@ class TcpConnection : Noncopyable,
   void connectDestroyed();  // should be called only once
 
   enum StateC {  //维护客户端状态,一条连接对应一个客户端
-    StateC_Init  //刚连接的状态,接受键盘输入进行相应操作:0->登录,1->注册
+    StateC_Init,  //刚连接的状态,接受键盘输入进行相应操作:0->登录,1->注册
+    StateC_Registering,  //正在注册
+    StateC_Logining_Step1,  //登录步骤一
+    StateC_Logining_Step2,  //登录步骤二
+    StateC_Login_Success  //登录成功
   };
   StateC getStateC() { return statec_;}
   void setStateC(StateC s) { statec_ = s; }
+
+  string username_;  //保存当前用户名
+  string absolutePath_;  //绝对路径,保存用户工作目录的绝对路径
+  string relativePath_;  //相对路径,用户工作目录内的相对路径
 
  private:
   enum StateE { kDisconnected, kConnecting, kConnected, kDisconnecting };

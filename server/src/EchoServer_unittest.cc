@@ -17,6 +17,7 @@ int numThreads = 3;
 using namespace std::placeholders;
 
 int sqlTableChange(char*);  //用户注册插入mysql
+int sqlSingleSelect(char* sql,char* buf);  //sql单值查询,查询结果填入buf
 
 class EchoServer
 {
@@ -50,9 +51,47 @@ class EchoServer
     //printf("%s recv %lu bytes at %s\n",conn->name().c_str(),msg.size(),time.toString().c_str());
     if(conn->getStateC() == TcpConnection::StateC_Init){
       //printf("%s\n",msg.c_str());
+      if(msg == "0") conn->setStateC(TcpConnection::StateC_Registering);
+      else if(msg == "1") conn->setStateC(TcpConnection::StateC_Logining_Step1);
+    }
+    else if(conn->getStateC() == TcpConnection::StateC_Registering){
+      conn->setStateC(TcpConnection::StateC_Init);
       handleRegister(conn,msg);
     }
-    
+    else if(conn->getStateC() == TcpConnection::StateC_Logining_Step1){
+      char sql[256] = {0};
+      char salt[32] = {0};
+      conn->username_ = msg;
+      sprintf(sql,"select Salt from UserInfo where UserName='%s'",msg.c_str());
+      sqlSingleSelect(sql,salt);
+      if(strlen(salt) == 0) conn->setStateC(TcpConnection::StateC_Init);
+      else conn->setStateC(TcpConnection::StateC_Logining_Step2);
+      conn->send(string(salt));
+    }
+    else if(conn->getStateC() == TcpConnection::StateC_Logining_Step2){
+      char sql[256] = {0};
+      char buf[128] = {0};
+      string secret(msg);
+      sprintf(sql,"select PassWord from UserInfo where UserName='%s'",conn->username_.c_str());
+      sqlSingleSelect(sql,buf);
+      if(secret == string(buf)){
+        int ret = 0;
+        conn->setStateC(TcpConnection::StateC_Login_Success);
+        conn->absolutePath_ = WORK_DIR + conn->username_;
+        conn->relativePath_ = "/";
+        conn->send(string((char*)&ret,4));
+      }
+      else{
+        int ret = -1;
+        conn->setStateC(TcpConnection::StateC_Init);
+        conn->send(string((char*)&ret,4));
+      }
+    }
+    else if(conn->getStateC() == TcpConnection::StateC_Login_Success){
+      printf("%s\n",msg.c_str());
+    }
+
+
   }
 
   void handleRegister(const TcpConnectionPtr& conn,const string& msg){

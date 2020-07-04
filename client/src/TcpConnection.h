@@ -90,11 +90,13 @@ class TcpConnection : Noncopyable,
   // called when TcpServer has removed me from its map
   void connectDestroyed();  // should be called only once
 
-  
-  
-  enum StateC {  //客户端状态
+  //客户端状态,根据状态对接收的消息执行不同行为
+  enum StateC {  
     StateC_Init,  //刚连接的状态,接受键盘输入进行相应操作:0->登录,1->注册
-    StateC_Registering  //正在注册
+    StateC_Registering,  //正在注册
+    StateC_Logining_Step1,  //登录步骤一
+    StateC_Logining_Step2,  //登录步骤二
+    StateC_Login_Success  //登录成功
   };
   StateC getStateC() { return statec_;}
   void setStateC(StateC s) { statec_ = s; }
@@ -121,6 +123,7 @@ class TcpConnection : Noncopyable,
   
   //处理用户事件
   void handleRegister();
+  void handleLogin();
 
   EventLoop* loop_;
   const string name_;

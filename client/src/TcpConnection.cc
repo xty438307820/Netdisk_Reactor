@@ -421,25 +421,39 @@ void TcpConnection::handleRegister(){
     send(package_);
 }
 
+void TcpConnection::handleLogin(){
+  char username[128]={0};
+  
+  printf("Logining.........\n");
+  printf("Enter username:");
+  //读取键盘输入账号
+  fgets(username,sizeof(username),stdin);
+  username[strlen(username)-1] = 0;
+  send(string(username));
+}
+
 void TcpConnection::handleKeyboardInput(){
   char buf[128]={0};
   if(statec_ == StateC_Init){  //刚启动程序状态
     fgets(buf,sizeof(buf),stdin);
     buf[strlen(buf)-1] = 0;  //去掉换行符
     if(strcmp(buf,"0") == 0){  //注册
+      send(string(buf));
       statec_ = StateC_Registering;
       handleRegister();
     }
     else if(strcmp(buf,"1") == 0){
-      printf("Logining.........\n");
+      send(string(buf));
+      statec_ = StateC_Logining_Step1;
+      handleLogin();
     }
     else printf("Enter 0 to register, 1 to login:\n");
   }
-  /*
-  char buf[128]={0};
-  while(fgets(buf,sizeof(buf),stdin) != NULL){
-    buf[strlen(buf)-1] = 0;//去掉换行符
-    send(buf);
+  else if(statec_ == StateC_Login_Success){
+    fgets(buf,sizeof(buf),stdin);
+    buf[strlen(buf)-1] = 0;  //去掉换行符
+    send(string(buf));
   }
-  */
+
+  
 }
