@@ -88,6 +88,9 @@ class EchoServer
       }
     }
     else if(conn->getStateC() == TcpConnection::StateC_Login_Success){
+      if(msg == "pwd"){
+        conn->send(conn->relativePath_);
+      }
       printf("%s\n",msg.c_str());
     }
 

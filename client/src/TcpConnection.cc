@@ -452,8 +452,11 @@ void TcpConnection::handleKeyboardInput(){
   else if(statec_ == StateC_Login_Success){
     fgets(buf,sizeof(buf),stdin);
     buf[strlen(buf)-1] = 0;  //去掉换行符
-    send(string(buf));
+    string sbuf = string(buf);
+
+    if(sbuf == "pwd") statec_ = StateC_Print;
+    
+    send(sbuf);
   }
 
-  
 }
