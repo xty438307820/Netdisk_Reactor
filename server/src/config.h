@@ -1,0 +1,1 @@
+#define WORK_DIR "/home/yu/my_project/deploy/home/"

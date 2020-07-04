@@ -105,7 +105,9 @@ int main(int argc, char* argv[])
       snprintf(buf, sizeof buf, "%d", i+1);
       clients.emplace_back(new EchoClient(&loop, serverAddr, buf));
     }
-
+    printf("--------------------------------\n");
+    printf("|Welcome to netdisk            |\n");
+    printf("--------------------------------\n");
     printf("Enter 0 to register, 1 to login:\n");
     clients[current]->connect();
     loop.loop();

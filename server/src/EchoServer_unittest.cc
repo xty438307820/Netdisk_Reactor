@@ -3,12 +3,14 @@
 #include "Thread.h"
 #include "EventLoop.h"
 #include "InetAddress.h"
+#include "config.h"
 
 #include <utility>
 
 #include <stdio.h>
 #include <unistd.h>
 #include <signal.h>
+#include <sys/stat.h> 
 
 int numThreads = 3;
 
@@ -65,6 +67,10 @@ class EchoServer
     char sql[256]={0};
     sprintf(sql,"insert into UserInfo(UserName,Salt,PassWord) values('%s','%s','%s')",username.c_str(),salt.c_str(),secret.c_str());
     int ret = sqlTableChange(sql);
+    if(0 == ret){
+      string path = WORK_DIR + username;
+      mkdir(path.c_str(),0755);
+    }
     conn->send(string((char*)&ret,4));
   }
 
