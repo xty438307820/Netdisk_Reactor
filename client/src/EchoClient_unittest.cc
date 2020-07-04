@@ -65,8 +65,7 @@ class EchoClient : Noncopyable
     #endif
     if(conn->getStateC() == conn->StateC_Registering){
       if(*(int*)msg.c_str() == 0){
-        printf("register ok------------------------\n");
-        conn->setStateC(conn->StateC_Init);
+        printf("Register ok.........\n");
       }
       else{
         printf("username exist, back to home page\n");
