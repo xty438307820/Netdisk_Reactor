@@ -6,30 +6,30 @@
 
 //filemode: d -> 目录, - -> 文件, 内部使用
 char __getMode(mode_t mode){
-	int high4 = mode >> 12;
-	if(high4 == 8) return '-';
-	else if(high4 == 4) return 'd';
+    int high4 = mode >> 12;
+    if(high4 == 8) return '-';
+    else if(high4 == 4) return 'd';
 }
 
 //内部使用
 std::string __getTime(char* tim){
-	int i;
-	int flag = 0;
-	int len = strlen(tim);
+    int i;
+    int flag = 0;
+    int len = strlen(tim);
     std::string tim_str;
-	for(i = 0;i < len;i++){
-		if(tim[i] == ' '){
-			i++;
+    for(i = 0;i < len;i++){
+        if(tim[i] == ' '){
+            i++;
             break;
-		}
-	}
-	while(1){
-		if(tim[i] == ':'){
-			flag++;
-			if(flag == 2) break;
-		}
+        }
+    }
+    while(1){
+        if(tim[i] == ':'){
+            flag++;
+            if(flag == 2) break;
+        }
         tim_str += tim[i++];
-	}
+    }
     return tim_str;
 }
 
