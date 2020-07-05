@@ -16,8 +16,10 @@ int numThreads = 3;
 
 using namespace std::placeholders;
 
+//工具函数
 int sqlTableChange(char*);  //用户注册插入mysql
 int sqlSingleSelect(char* sql,char* buf);  //sql单值查询,查询结果填入buf
+std::string myls(const char*);
 
 class EchoServer
 {
@@ -91,7 +93,9 @@ class EchoServer
       if(msg == "pwd"){
         conn->send(conn->relativePath_);
       }
-      printf("%s\n",msg.c_str());
+      else if(msg == "ls"){
+        conn->send( myls((conn->absolutePath_+conn->relativePath_).c_str()) );
+      }
     }
 
 

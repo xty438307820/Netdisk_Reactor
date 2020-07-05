@@ -454,7 +454,7 @@ void TcpConnection::handleKeyboardInput(){
     buf[strlen(buf)-1] = 0;  //去掉换行符
     string sbuf = string(buf);
 
-    if(sbuf == "pwd") statec_ = StateC_Print;
+    if(sbuf == "pwd" || sbuf == "ls") statec_ = StateC_Print;
     
     send(sbuf);
   }

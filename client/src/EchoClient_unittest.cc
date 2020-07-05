@@ -101,7 +101,7 @@ class EchoClient : Noncopyable
       }
     }
     else if(conn->getStateC() == conn->StateC_Print){
-      printf("%s\n",msg.c_str());
+      if(msg.size() > 0) printf("%s\n",msg.c_str());
       conn->setStateC(conn->StateC_Login_Success);
     }
 
