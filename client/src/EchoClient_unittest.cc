@@ -104,6 +104,10 @@ class EchoClient : Noncopyable
       if(msg.size() > 0) printf("%s\n",msg.c_str());
       conn->setStateC(conn->StateC_Login_Success);
     }
+    else if(conn->getStateC() == conn->StateC_Mkdir){
+      if(*(int*)msg.c_str() != 0) printf("mkdir: cannot create directory: File exists\n");
+      conn->setStateC(conn->StateC_Login_Success);
+    }
 
   }
 

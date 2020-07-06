@@ -454,7 +454,28 @@ void TcpConnection::handleKeyboardInput(){
     buf[strlen(buf)-1] = 0;  //去掉换行符
     string sbuf = string(buf);
 
+    //这两个命令不带参数
     if(sbuf == "pwd" || sbuf == "ls") statec_ = StateC_Print;
+    //以下命令带一个参数
+    else{
+      int start = 0;
+      int len = sbuf.size();
+      string cmd;
+      string parm;
+      while(start < sbuf.size() && sbuf[start] == ' ') start++;
+      while(start < sbuf.size() && sbuf[start] != ' ') cmd.push_back(sbuf[start++]);
+      while(start < sbuf.size() && sbuf[start] == ' ') start++;
+      while(start < sbuf.size() && sbuf[start] != ' ') parm.push_back(sbuf[start++]);
+      
+      if(cmd == "mkdir"){
+        if(parm == ""){
+          printf("mkdir: missing operand\n");
+          return;
+        }
+        else statec_ = StateC_Mkdir;
+      }
+
+    }
     
     send(sbuf);
   }

@@ -97,7 +97,8 @@ class TcpConnection : Noncopyable,
     StateC_Logining_Step1,  //登录步骤一
     StateC_Logining_Step2,  //登录步骤二
     StateC_Login_Success,  //登录成功
-    StateC_Print  //该状态直接将接收的消息打印
+    StateC_Print,  //该状态直接将接收的消息打印
+    StateC_Mkdir,  //该状态等待mkdir命令的返回结果
   };
   StateC getStateC() { return statec_;}
   void setStateC(StateC s) { statec_ = s; }
