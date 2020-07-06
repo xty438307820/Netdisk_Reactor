@@ -20,6 +20,7 @@ using namespace std::placeholders;
 int sqlTableChange(char*);  //用户注册插入mysql
 int sqlSingleSelect(char* sql,char* buf);  //sql单值查询,查询结果填入buf
 std::string myls(const char*);
+int myMkdir(const char*);
 
 class EchoServer
 {
@@ -90,14 +91,31 @@ class EchoServer
       }
     }
     else if(conn->getStateC() == TcpConnection::StateC_Login_Success){
+      //前两个命令为无参命令
       if(msg == "pwd"){
         conn->send(conn->relativePath_);
       }
       else if(msg == "ls"){
         conn->send( myls((conn->absolutePath_+conn->relativePath_).c_str()) );
       }
-    }
+      //后面的命令为带一个参数的命令
+      else{
+        int start = 0;
+        string cmd;
+        string parm;
+        while(start < msg.size() && msg[start] == ' ') start++;
+        while(start < msg.size() && msg[start] != ' ') cmd.push_back(msg[start++]);
+        while(start < msg.size() && msg[start] == ' ') start++;
+        while(start < msg.size() && msg[start] != ' ') parm.push_back(msg[start++]);
 
+        if(cmd == "mkdir"){
+          int ret = myMkdir((conn->absolutePath_ + conn->relativePath_ + parm).c_str());
+          conn->send(string((char*)&ret,4));
+        }
+
+      }
+
+    }
 
   }
 

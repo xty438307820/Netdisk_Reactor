@@ -3,6 +3,8 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 //filemode: d -> 目录, - -> 文件, 内部使用
 char __getMode(mode_t mode){
@@ -56,4 +58,20 @@ std::string myls(const char* path){
     closedir(pdir);
     if(lsInfo.size() > 0) lsInfo.pop_back();
     return lsInfo;
+}
+
+//return -1代表文件夹创建失败, 同名文件或文件夹存在
+int myMkdir(const char* path){
+    DIR* pdir = opendir(path);
+    if(pdir != NULL){
+        closedir(pdir);
+        return -1;
+    }
+    int fd = open(path,O_RDONLY);
+    if(fd >= 0){
+        close(fd);
+        return -1;
+    }
+    mkdir(path,0755);
+    return 0;
 }
