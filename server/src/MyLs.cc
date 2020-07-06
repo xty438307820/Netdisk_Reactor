@@ -37,7 +37,7 @@ std::string __getTime(char* tim){
 //example: myls("./"), 注意参数最后要有'/'
 std::string myls(const char* path){
     struct dirent *p;
-    DIR *pdir=opendir(path);
+    DIR *pdir = opendir(path);
     struct stat sta;
     std::string lsInfo;
     char buf[288] = {0};
@@ -53,6 +53,7 @@ std::string myls(const char* path){
         sprintf(buf,"%c %12ld %s %s\n",mode,size,tim.c_str(),p->d_name);
         lsInfo += buf;
     }
+    closedir(pdir);
     if(lsInfo.size() > 0) lsInfo.pop_back();
     return lsInfo;
 }
