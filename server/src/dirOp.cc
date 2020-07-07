@@ -75,3 +75,7 @@ int myMkdir(const char* path){
     mkdir(path,0755);
     return 0;
 }
+
+int myRemove(const char* path){
+    return remove(path);
+}

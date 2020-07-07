@@ -21,6 +21,7 @@ int sqlTableChange(char*);  //用户注册插入mysql
 int sqlSingleSelect(char* sql,char* buf);  //sql单值查询,查询结果填入buf
 std::string myls(const char*);
 int myMkdir(const char*);
+int myRemove(const char*);
 
 class EchoServer
 {
@@ -110,6 +111,10 @@ class EchoServer
 
         if(cmd == "mkdir"){
           int ret = myMkdir((conn->absolutePath_ + conn->relativePath_ + parm).c_str());
+          conn->send(string((char*)&ret,4));
+        }
+        else if(cmd == "remove"){
+          int ret = myRemove((conn->absolutePath_ + conn->relativePath_ + parm).c_str());
           conn->send(string((char*)&ret,4));
         }
 

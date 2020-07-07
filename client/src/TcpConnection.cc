@@ -474,6 +474,13 @@ void TcpConnection::handleKeyboardInput(){
         }
         else statec_ = StateC_Mkdir;
       }
+      else if(cmd == "remove"){
+        if(parm == ""){
+          printf("remove: missing operand\n");
+          return;
+        }
+        else statec_ = StateC_Remove;
+      }
 
     }
     
