@@ -22,6 +22,7 @@ int sqlSingleSelect(char* sql,char* buf);  //sql单值查询,查询结果填入b
 std::string myls(const char*);
 int myMkdir(const char*);
 int myRemove(const char*);
+int testOpenDir(const char*);
 
 class EchoServer
 {
@@ -115,6 +116,29 @@ class EchoServer
         }
         else if(cmd == "remove"){
           int ret = myRemove((conn->absolutePath_ + conn->relativePath_ + parm).c_str());
+          conn->send(string((char*)&ret,4));
+        }
+        else if(cmd == "cd"){
+          int ret;
+          if(parm == ""){
+            conn->relativePath_ = "/";
+            ret = 0;
+          }
+          else if(parm == ".") ret = 0;
+          else if(parm == ".."){
+            if(conn->relativePath_ != "/"){
+              conn->relativePath_.pop_back();
+              while(conn->relativePath_.back() != '/') conn->relativePath_.pop_back();
+            }
+            ret = 0;
+          }
+          else{
+            ret = testOpenDir((conn->absolutePath_ + conn->relativePath_ + parm).c_str());
+            if(ret == 0){
+              conn->relativePath_ += parm;
+              conn->relativePath_ += "/";
+            }
+          }
           conn->send(string((char*)&ret,4));
         }
 

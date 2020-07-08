@@ -68,3 +68,10 @@ int myMkdir(const char* path){
 int myRemove(const char* path){
     return remove(path);
 }
+
+int testOpenDir(const char* path){
+    DIR* pdir = opendir(path);
+    if(pdir == NULL) return -1;
+    closedir(pdir);
+    return 0;
+}

@@ -466,10 +466,15 @@ void TcpConnection::handleKeyboardInput(){
       while(start < sbuf.size() && sbuf[start] != ' ') cmd.push_back(sbuf[start++]);
       while(start < sbuf.size() && sbuf[start] == ' ') start++;
       while(start < sbuf.size() && sbuf[start] != ' ') parm.push_back(sbuf[start++]);
+      while(start < sbuf.size() && sbuf[start] == ' ') start++;
       
       if(cmd == "mkdir"){
         if(parm == ""){
           printf("mkdir: missing operand\n");
+          return;
+        }
+        else if(start < sbuf.size()){
+          printf("mkdir: too many arguments\n");
           return;
         }
         else statec_ = StateC_Mkdir;
@@ -479,7 +484,18 @@ void TcpConnection::handleKeyboardInput(){
           printf("remove: missing operand\n");
           return;
         }
+        else if(start < sbuf.size()){
+          printf("remove: too many arguments\n");
+          return;
+        }
         else statec_ = StateC_Remove;
+      }
+      else if(cmd == "cd"){
+        if(start < sbuf.size()){
+          printf("cd: too many arguments\n");
+          return;
+        }
+        else statec_ = StateC_Cd;
       }
 
     }

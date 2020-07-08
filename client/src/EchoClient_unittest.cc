@@ -112,6 +112,10 @@ class EchoClient : Noncopyable
       if(*(int*)msg.c_str() != 0) printf("remove: cannot remove: No such file or directory\n");
       conn->setStateC(conn->StateC_Login_Success);
     }
+    else if(conn->getStateC() == conn->StateC_Cd){
+      if(*(int*)msg.c_str() != 0) printf("cd: cannot cd: No such directory\n");
+      conn->setStateC(conn->StateC_Login_Success);
+    }
 
   }
 
