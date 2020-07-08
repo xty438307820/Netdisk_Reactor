@@ -62,18 +62,7 @@ std::string myls(const char* path){
 
 //return -1代表文件夹创建失败, 同名文件或文件夹存在
 int myMkdir(const char* path){
-    DIR* pdir = opendir(path);
-    if(pdir != NULL){
-        closedir(pdir);
-        return -1;
-    }
-    int fd = open(path,O_RDONLY);
-    if(fd >= 0){
-        close(fd);
-        return -1;
-    }
-    mkdir(path,0755);
-    return 0;
+    return mkdir(path,0755);
 }
 
 int myRemove(const char* path){
