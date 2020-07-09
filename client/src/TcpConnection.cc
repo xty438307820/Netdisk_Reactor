@@ -9,6 +9,9 @@
 
 using std::placeholders::_1;
 
+//打印绿色字体
+void printGreen(const char* s);
+
 void defaultConnectionCallback(const TcpConnectionPtr& conn)
 {
   #ifdef DEBUG
@@ -429,6 +432,7 @@ void TcpConnection::handleLogin(){
   //读取键盘输入账号
   fgets(username,sizeof(username),stdin);
   username[strlen(username)-1] = 0;
+  this->username = username;
   send(string(username));
 }
 
@@ -453,9 +457,19 @@ void TcpConnection::handleKeyboardInput(){
     fgets(buf,sizeof(buf),stdin);
     buf[strlen(buf)-1] = 0;  //去掉换行符
     string sbuf = string(buf);
+    //去除首尾空格
+    while(sbuf.back()==' ') sbuf.pop_back();
+    while(*sbuf.begin() == ' ') sbuf.erase(sbuf.begin());
 
     //这两个命令不带参数
-    if(sbuf == "pwd" || sbuf == "ls") statec_ = StateC_Print;
+    if(sbuf == "pwd" || sbuf == "ls"){
+      statec_ = StateC_Print;
+      send(sbuf);
+    }
+    else if(sbuf == "clear"){
+      system("clear");
+      printGreen(username.c_str());
+    }
     //以下命令带一个参数
     else{
       int start = 0;
@@ -471,10 +485,12 @@ void TcpConnection::handleKeyboardInput(){
       if(cmd == "mkdir"){
         if(parm == ""){
           printf("mkdir: missing operand\n");
+          printGreen(username.c_str());
           return;
         }
         else if(start < sbuf.size()){
           printf("mkdir: too many arguments\n");
+          printGreen(username.c_str());
           return;
         }
         else statec_ = StateC_Mkdir;
@@ -482,10 +498,12 @@ void TcpConnection::handleKeyboardInput(){
       else if(cmd == "remove"){
         if(parm == ""){
           printf("remove: missing operand\n");
+          printGreen(username.c_str());
           return;
         }
         else if(start < sbuf.size()){
           printf("remove: too many arguments\n");
+          printGreen(username.c_str());
           return;
         }
         else statec_ = StateC_Remove;
@@ -493,14 +511,21 @@ void TcpConnection::handleKeyboardInput(){
       else if(cmd == "cd"){
         if(start < sbuf.size()){
           printf("cd: too many arguments\n");
+          printGreen(username.c_str());
           return;
         }
         else statec_ = StateC_Cd;
       }
-
+      //其他命令为不合法命令
+      else{
+        if(cmd == "pwd" || cmd == "ls" || cmd =="clear" ) printf("%s: too many arguments\n",cmd.c_str());
+        else printf("%s: command not found\n",cmd.c_str());
+        printGreen(username.c_str());
+        return;
+      }
+      send(sbuf);
     }
-    
-    send(sbuf);
+
   }
 
 }

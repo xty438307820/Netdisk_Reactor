@@ -17,6 +17,9 @@ class EchoClient;
 std::vector<std::unique_ptr<EchoClient>> clients;
 int current = 0;
 
+//打印绿色字体
+void printGreen(const char*);
+
 class EchoClient : Noncopyable
 {
  public:
@@ -91,8 +94,9 @@ class EchoClient : Noncopyable
     }
     else if(conn->getStateC() == conn->StateC_Logining_Step2){
       if(*(int*)msg.c_str() == 0){
-        printf("Login success.........\n");
+        printf("\033[1;32mLogin success.........\033[0m\n");
         conn->setStateC(TcpConnection::StateC_Login_Success);
+        printGreen(conn->username.c_str());
       }
       else{
         printf("Your username or password error, back to home page\n");
@@ -103,18 +107,22 @@ class EchoClient : Noncopyable
     else if(conn->getStateC() == conn->StateC_Print){
       if(msg.size() > 0) printf("%s\n",msg.c_str());
       conn->setStateC(conn->StateC_Login_Success);
+      printGreen(conn->username.c_str());
     }
     else if(conn->getStateC() == conn->StateC_Mkdir){
       if(*(int*)msg.c_str() != 0) printf("mkdir: cannot create directory: File exists\n");
       conn->setStateC(conn->StateC_Login_Success);
+      printGreen(conn->username.c_str());
     }
     else if(conn->getStateC() == conn->StateC_Remove){
       if(*(int*)msg.c_str() != 0) printf("remove: cannot remove: No such file or directory\n");
       conn->setStateC(conn->StateC_Login_Success);
+      printGreen(conn->username.c_str());
     }
     else if(conn->getStateC() == conn->StateC_Cd){
       if(*(int*)msg.c_str() != 0) printf("cd: cannot cd: No such directory\n");
       conn->setStateC(conn->StateC_Login_Success);
+      printGreen(conn->username.c_str());
     }
 
   }

@@ -105,6 +105,8 @@ class TcpConnection : Noncopyable,
   StateC getStateC() { return statec_;}
   void setStateC(StateC s) { statec_ = s; }
 
+  string username;  //保存当前用户名
+
  private:
   enum StateE { kDisconnected, kConnecting, kConnected, kDisconnecting };
   void handleRead(Timestamp receiveTime);
