@@ -4,6 +4,7 @@
 #include "EventLoop.h"
 #include "InetAddress.h"
 #include "config.h"
+#include "Socket.h"
 
 #include <utility>
 
@@ -11,6 +12,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/stat.h> 
+#include <fcntl.h>
 
 int numThreads = 3;
 
@@ -23,6 +25,7 @@ std::string myls(const char*);
 int myMkdir(const char*);
 int myRemove(const char*);
 int testOpenDir(const char*);
+int fileExist(const char*);
 
 class EchoServer
 {
@@ -84,12 +87,12 @@ class EchoServer
         conn->setStateC(TcpConnection::StateC_Login_Success);
         conn->absolutePath_ = WORK_DIR + conn->username_;
         conn->relativePath_ = "/";
-        conn->send(string((char*)&ret,4));
+        conn->send(string((char*)&ret,sizeof(int)));
       }
       else{
         int ret = -1;
         conn->setStateC(TcpConnection::StateC_Init);
-        conn->send(string((char*)&ret,4));
+        conn->send(string((char*)&ret,sizeof(int)));
       }
     }
     else if(conn->getStateC() == TcpConnection::StateC_Login_Success){
@@ -112,11 +115,11 @@ class EchoServer
 
         if(cmd == "mkdir"){
           int ret = myMkdir((conn->absolutePath_ + conn->relativePath_ + parm).c_str());
-          conn->send(string((char*)&ret,4));
+          conn->send(string((char*)&ret,sizeof(int)));
         }
         else if(cmd == "remove"){
           int ret = myRemove((conn->absolutePath_ + conn->relativePath_ + parm).c_str());
-          conn->send(string((char*)&ret,4));
+          conn->send(string((char*)&ret,sizeof(int)));
         }
         else if(cmd == "cd"){
           int ret;
@@ -139,11 +142,32 @@ class EchoServer
               conn->relativePath_ += "/";
             }
           }
-          conn->send(string((char*)&ret,4));
+          conn->send(string((char*)&ret,sizeof(int)));
+        }
+        else if(cmd == "puts"){
+          int ret = fileExist((conn->absolutePath_ + conn->relativePath_ + parm).c_str()) ? 0 : -1;
+          if(ret == 0){
+            conn->setStateC(conn->StateC_Begin_Puts);
+            conn->so_file.reset(new Socket(open( (conn->absolutePath_ + conn->relativePath_ + parm).c_str(), O_CREAT|O_WRONLY, 0644)));
+          }
+          conn->send(string((char*)&ret,sizeof(int)));
         }
 
       }
-
+    }
+    else if(conn->getStateC() == conn->StateC_Begin_Puts){
+      conn->file_size = *(long*)msg.c_str();
+      conn->setStateC(conn->StateC_Puts);
+      int ret = 0;
+      conn->send(string((char*)&ret,sizeof(int)));
+    }
+    else if(conn->getStateC() == conn->StateC_Puts){
+      conn->file_size -= msg.size();
+      write(conn->so_file->fd(), msg.c_str(), msg.size());
+      if(conn->file_size == 0){
+        conn->so_file.reset();
+        conn->setStateC(conn->StateC_Login_Success);
+      }
     }
 
   }

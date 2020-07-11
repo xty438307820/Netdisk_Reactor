@@ -95,7 +95,9 @@ class TcpConnection : Noncopyable,
     StateC_Registering,  //正在注册
     StateC_Logining_Step1,  //登录步骤一
     StateC_Logining_Step2,  //登录步骤二
-    StateC_Login_Success  //登录成功
+    StateC_Login_Success,  //登录成功
+    StateC_Begin_Puts,  //该状态客户端传输文件大小
+    StateC_Puts  //客户端puts文件
   };
   StateC getStateC() { return statec_;}
   void setStateC(StateC s) { statec_ = s; }
@@ -103,6 +105,9 @@ class TcpConnection : Noncopyable,
   string username_;  //保存当前用户名
   string absolutePath_;  //绝对路径,保存用户工作目录的绝对路径
   string relativePath_;  //相对路径,用户工作目录内的相对路径
+
+  std::unique_ptr<Socket> so_file;  //暂存文件
+  long file_size;  //暂存文件大小
 
  private:
   enum StateE { kDisconnected, kConnecting, kConnected, kDisconnecting };

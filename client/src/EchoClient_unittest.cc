@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <signal.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -123,6 +125,44 @@ class EchoClient : Noncopyable
       if(*(int*)msg.c_str() != 0) printf("cd: cannot cd: No such directory\n");
       conn->setStateC(conn->StateC_Login_Success);
       printGreen(conn->username.c_str());
+    }
+    else if(conn->getStateC() == conn->StateC_Begin_Puts){
+      if(*(int*)msg.c_str() != 0){
+        printf("puts: cannot puts: File exists\n");
+        conn->setStateC(conn->StateC_Login_Success);
+        printGreen(conn->username.c_str());
+      }
+      else{
+        struct stat statbuf;
+        stat((char*)conn->filename.c_str(),&statbuf);
+        conn->file_size = statbuf.st_size;
+        conn->setStateC(conn->StateC_Puts);
+        conn->send(string((char*)&statbuf.st_size,sizeof(long)));
+      }
+    }
+    else if(conn->getStateC() == conn->StateC_Puts){
+      if(*(int*)msg.c_str() == 0){
+        printf("begin puts......\n");
+        int fd = open(conn->filename.c_str(),O_RDONLY);
+        char buf[10240] = {0};
+        int len;
+
+        long curLen = 0;
+
+        while( (len = read(fd, buf, sizeof(buf))) != 0){
+          buf[len] = 0;
+          conn->send(string(buf));
+          curLen += len;
+          printf("%5.2f%%\r",(double)curLen/conn->file_size );
+          fflush(stdout);
+        }
+        printf("100.00%%\n");
+        close(fd);
+
+        conn->setStateC(conn->StateC_Login_Success);
+        printGreen(conn->username.c_str());
+      }
+
     }
 
   }

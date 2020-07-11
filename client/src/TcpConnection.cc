@@ -516,6 +516,30 @@ void TcpConnection::handleKeyboardInput(){
         }
         else statec_ = StateC_Cd;
       }
+      else if(cmd == "puts"){
+        if(parm == ""){
+          printf("puts: missing operand\n");
+          printGreen(username.c_str());
+          return;
+        }
+        else if(start < sbuf.size()){
+          printf("puts: too many arguments\n");
+          printGreen(username.c_str());
+          return;
+        }
+        else{
+          char buf[256] = {0};
+          getcwd(buf,sizeof(buf));
+          string filePath = string(buf) + "/" + parm;
+          if(access(filePath.c_str(),F_OK) != 0){
+            printf("puts: No such file in local\n");
+            printGreen(username.c_str());
+            return;
+          }
+          filename = parm;
+          statec_ = StateC_Begin_Puts;
+        }
+      }
       //其他命令为不合法命令
       else{
         if(cmd == "pwd" || cmd == "ls" || cmd =="clear" ) printf("%s: too many arguments\n",cmd.c_str());
@@ -525,7 +549,6 @@ void TcpConnection::handleKeyboardInput(){
       }
       send(sbuf);
     }
-
   }
 
 }
