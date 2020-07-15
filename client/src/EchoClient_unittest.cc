@@ -144,12 +144,12 @@ class EchoClient : Noncopyable
       if(*(int*)msg.c_str() == 0){
         printf("begin puts......\n");
         int fd = open(conn->filename.c_str(),O_RDONLY);
-        char buf[10240] = {0};
+        char buf[8192] = {0};
         int len;
 
         long curLen = 0;
 
-        while( (len = read(fd, buf, sizeof(buf))) != 0){
+        while( (len = read(fd, buf, sizeof(buf)-1) ) != 0){
           buf[len] = 0;
           conn->send(string(buf));
           curLen += len;
