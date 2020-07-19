@@ -5,6 +5,7 @@
 #include "InetAddress.h"
 #include "config.h"
 #include "Socket.h"
+#include "Channel.h"
 
 #include <utility>
 
@@ -13,6 +14,7 @@
 #include <signal.h>
 #include <sys/stat.h> 
 #include <fcntl.h>
+#include <sys/eventfd.h>
 
 int numThreads = 3;
 
@@ -152,7 +154,28 @@ class EchoServer
           }
           conn->send(string((char*)&ret,sizeof(int)));
         }
+        else if(cmd == "gets"){
+          int flagDir = testOpenDir( (conn->absolutePath_ + conn->relativePath_ + parm).c_str() );
+          int flagFile = fileExist( (conn->absolutePath_ + conn->relativePath_ + parm).c_str() );
+          long ret = (flagDir == -1 && flagFile == 0)? 0: -1;
+          if(ret == 0){
+            struct stat statbuf;
+            stat((char*)(conn->absolutePath_ + conn->relativePath_ + parm).c_str(),&statbuf);
+            conn->file_size = statbuf.st_size;
+            ret = statbuf.st_size;
+            
+            conn->setStateC(conn->StateC_Gets);
 
+            conn->so_file.reset( new Socket( open( (conn->absolutePath_ + conn->relativePath_ + parm).c_str(), O_RDONLY|O_NONBLOCK )));
+            conn->gets_fd_ = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+            conn->gets_channel_.reset( new Channel( conn->getLoop(), conn->gets_fd_ ));
+            conn->gets_channel_->setReadCallback( std::bind(&TcpConnection::handleGets, conn) );
+            conn->gets_channel_->enableReading();
+            uint64_t one = 1;
+            write(conn->gets_fd_, &one, sizeof(one));
+          }
+          conn->send(string((char*)&ret,sizeof(long)));
+        }
       }
     }
     else if(conn->getStateC() == conn->StateC_Begin_Puts){
@@ -166,6 +189,14 @@ class EchoServer
       write(conn->so_file->fd(), msg.c_str(), msg.size());
       if(conn->file_size == 0){
         conn->so_file.reset();
+        conn->setStateC(conn->StateC_Login_Success);
+      }
+    }
+    else if(conn->getStateC() == conn->StateC_Gets){
+      if(*(int*)msg.c_str() == 0){
+        conn->so_file.reset();
+        conn->gets_channel_.reset();
+        close(conn->gets_fd_);
         conn->setStateC(conn->StateC_Login_Success);
       }
     }

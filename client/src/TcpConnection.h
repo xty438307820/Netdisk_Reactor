@@ -102,14 +102,18 @@ class TcpConnection : Noncopyable,
     StateC_Remove,  //该状态等待remove命令的返回结果
     StateC_Cd,  //该状态等待cd命令的返回结果
     StateC_Begin_Puts,  //该状态等待服务端返回是否有重复文件
-    StateC_Puts  //客户端puts文件
+    StateC_Puts,  //客户端puts文件
+    StateC_Begin_Gets,  //该状态等待服务端返回是否有该文件
+    StateC_Gets  //客户端gets文件
   };
   StateC getStateC() { return statec_;}
   void setStateC(StateC s) { statec_ = s; }
 
   string username;  //保存当前用户名
   string filename;  //暂存puts或gets的文件名
-  long file_size;  //暂存文件大小
+  std::unique_ptr<Socket> so_file;  //暂存文件
+  long file_size;  //暂存文件大小,puts和gets用
+  long cur_size;  //目前已经gets数据
 
  private:
   enum StateE { kDisconnected, kConnecting, kConnected, kDisconnecting };

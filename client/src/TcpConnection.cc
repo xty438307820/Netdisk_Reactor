@@ -11,6 +11,8 @@ using std::placeholders::_1;
 
 //打印绿色字体
 void printGreen(const char* s);
+//测试文件或目录是否存在,绝对路径
+int fileExist(const char* path);
 
 void defaultConnectionCallback(const TcpConnectionPtr& conn)
 {
@@ -536,9 +538,32 @@ void TcpConnection::handleKeyboardInput(){
             printGreen(username.c_str());
             return;
           }
-          filename = parm;
+          filename = filePath;
           statec_ = StateC_Begin_Puts;
         }
+      }
+      else if(cmd == "gets"){
+        if(parm == ""){
+          printf("gets: missing operand\n");
+          printGreen(username.c_str());
+          return;
+        }
+        else if(start < sbuf.size()){
+          printf("gets: too many arguments\n");
+          printGreen(username.c_str());
+          return;
+        }
+        char buf[256] = {0};
+        getcwd(buf,sizeof(buf));
+        string filePath = string(buf) + "/" + parm;
+        //首先测试是否存在同名目录
+        if( fileExist(filePath.c_str()) == 0 ){
+          printf("gets: File exists in local\n");
+          printGreen(username.c_str());
+          return;
+        }
+        filename = filePath;
+        statec_ = StateC_Begin_Gets;
       }
       //其他命令为不合法命令
       else{

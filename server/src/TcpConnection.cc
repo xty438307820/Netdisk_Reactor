@@ -367,3 +367,17 @@ void TcpConnection::handleError()
   printf("TcpConnection::handleError [%s] - SO_ERROR = %d\n",name_.c_str(),err);
 }
 
+void TcpConnection::handleGets(){
+  char buf[8192] = {0};
+  
+  int len = read(so_file->fd(), buf, sizeof(buf)-1 );
+  
+  if(file_size == 0){
+    gets_channel_->disableReading();
+    gets_channel_->remove();
+    return;
+  }
+
+  send(string(buf));
+  file_size -= len;
+}

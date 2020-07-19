@@ -2,6 +2,7 @@
 
 #include "EventLoop.h"
 #include "InetAddress.h"
+#include "Socket.h"
 
 #include <utility>
 
@@ -162,7 +163,36 @@ class EchoClient : Noncopyable
         conn->setStateC(conn->StateC_Login_Success);
         printGreen(conn->username.c_str());
       }
+    }
+    else if(conn->getStateC() == conn->StateC_Begin_Gets ){
+      if(*(long*)msg.c_str() < 0){
+        printf("gets: cannot gets: No such file\n");
+        conn->setStateC(conn->StateC_Login_Success);
+        printGreen(conn->username.c_str());
+      }
+      else{
+        printf("begin gets......\n");
+        conn->file_size = *(long*)msg.c_str();
+        conn->cur_size = 0;
+        conn->setStateC(conn->StateC_Gets);
+        conn->so_file.reset( new Socket( open(conn->filename.c_str(),O_CREAT|O_WRONLY, 0644) ) );
+      }
+    }
+    else if(conn->getStateC() == conn->StateC_Gets){
+      conn->cur_size += msg.size();
+      write(conn->so_file->fd(), msg.c_str(), msg.size());
+      printf("%5.2f%%\r",(double)conn->cur_size/conn->file_size );
+      fflush(stdout);
+      if(conn->cur_size == conn->file_size){
+        conn->so_file.reset();
+        conn->setStateC(conn->StateC_Login_Success);
 
+        int ret = 0;
+        conn->send(string((char*)&ret,sizeof(int)));
+        
+        printf("100.00%%\n");
+        printGreen(conn->username.c_str());
+      }
     }
 
   }

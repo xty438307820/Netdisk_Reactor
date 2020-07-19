@@ -97,7 +97,8 @@ class TcpConnection : Noncopyable,
     StateC_Logining_Step2,  //登录步骤二
     StateC_Login_Success,  //登录成功
     StateC_Begin_Puts,  //该状态客户端传输文件大小
-    StateC_Puts  //客户端puts文件
+    StateC_Puts,  //客户端puts文件
+    StateC_Gets
   };
   StateC getStateC() { return statec_;}
   void setStateC(StateC s) { statec_ = s; }
@@ -108,6 +109,10 @@ class TcpConnection : Noncopyable,
 
   std::unique_ptr<Socket> so_file;  //暂存文件
   long file_size;  //暂存文件大小
+
+  std::unique_ptr<Channel> gets_channel_;//gets对应的文件channel
+  int gets_fd_;  //eventfd
+  void handleGets();
 
  private:
   enum StateE { kDisconnected, kConnecting, kConnected, kDisconnecting };
