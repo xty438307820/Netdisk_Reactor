@@ -169,7 +169,7 @@ void EPollPoller::update(int operation, Channel* channel)
   event.data.ptr = channel;
   int fd = channel->fd();
   #ifdef DEBUG
-  printf("epoll_ctl op = %s fd = %d event = { %s }",operationToString(operation),fd,channel->eventsToString().c_str());
+  printf("epoll_ctl op = %s fd = %d event = { %s }\n",operationToString(operation),fd,channel->eventsToString().c_str());
   #endif
   if (::epoll_ctl(epollfd_, operation, fd, &event) < 0)
   {

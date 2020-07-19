@@ -154,7 +154,7 @@ void EPollPoller::update(int operation, Channel* channel)
   event.events = channel->events();
   event.data.ptr = channel;
   int fd = channel->fd();
-  printf("epoll_ctl op = %s fd = %d event = { %s }",operationToString(operation),fd,channel->eventsToString().c_str());
+  printf("epoll_ctl op = %s fd = %d event = { %s }\n",operationToString(operation),fd,channel->eventsToString().c_str());
   if (::epoll_ctl(epollfd_, operation, fd, &event) < 0)
   {
     if (operation == EPOLL_CTL_DEL)
